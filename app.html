@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting Image Generator</title>
+    <style>
+        :root {
+            --primary: #ff6b81;
+            --secondary: #f8a5c2;
+            --dark: #2f3542;
+            --light: #ffffff;
+            --bg: #f1f2f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1100px;
+            width: 100%;
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="file"], select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #edf2f7;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .emoji-picker {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .emoji-btn {
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border: 2px solid #edf2f7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--secondary);
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-main:hover {
+            background-color: #ff4757;
+        }
+
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 1rem;
+            position: relative;
+            min-height: 400px;
+        }
+
+        #canvasContainer {
+            position: relative;
+            max-width: 100%;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .placeholder-text {
+            color: #a0aec0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌸 Greeting Card Maker 😊</h1>
+        <p>Upload a picture, add text, and decorate with flower smiles!</p>
+    </header>
+
+    <div class="container">
+        <!-- Left Side: Controls -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="imageUpload">1. Upload your picture</label>
+                <input type="file" id="imageUpload" accept="image/*">
+            </div>
+
+            <div class="control-group">
+                <label for="greetingText">2. Enter your text</label>
+                <input type="text" id="greetingText" value="Greetings!" placeholder="Type your message here..." /n>
+            </div>
+
+            <div class="control-group">
+                <label>3. Click to add flower & smile icons</label>
+                <div class="emoji-picker">
+                    <button class="emoji-btn" onclick="addEmoji('🌸')">🌸</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌻')">🌻</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌹')">🌹</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌷')">🌷</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌼')">🌼</button>
+                    <button class="emoji-btn" onclick="addEmoji('😊')">😊</button>
+                    <button class="emoji-btn" onclick="addEmoji('✨')">✨</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="textColor">4. Text Color</label>
+                <select id="textColor">
+                    <option value="#ffffff">White</option>
+                    <option value="#ff6b81">Pink</option>
+                    <option value="#ffa502">Orange</option>
+                    <option value="#2ed573">Green</option>
+                    <option value="#2f3542">Dark Charcoal</option>
+                </select>
+            </div>
+
+            <button class="btn-main" id="downloadBtn" disabled>Download Image</button>
+        </div>
+
+        <!-- Right Side: Live Preview -->
+        <div class="preview-panel">
+            <div id="placeholder" class="placeholder-text">
+                <p>Your beautiful greeting will appear here after uploading a photo.</p>
+            </div>
+            <div id="canvasContainer">
+                <canvas id="cardCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const greetingText = document.getElementById('greetingText');
+        const textColor = document.getElementById('textColor');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
+        const placeholder = document.getElementById('placeholder');
+        const canvasContainer = document.getElementById('canvasContainer');
+
+        let uploadedImage = null;
+
+        // Listen for image upload
+        imageUpload.addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                uploadedImage = new Image();
+                uploadedImage.onload = function() {
+                    // Set canvas resolution to match image size (max 800px width for performance)
+                    const scale = Math.min(800 / uploadedImage.width, 1);
+                    canvas.width = uploadedImage.width * scale;
+                    canvas.height = uploadedImage.height * scale;
+
+                    // Show canvas, hide placeholder
+                    placeholder.style.display = 'none';
+                    canvasContainer.style.display = 'block';
+                    downloadBtn.disabled = false;
+
+                    drawCard();
+                }
+                uploadedImage.src = event.target.result;
+            }
+            if(e.target.files[0]) {
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Listen for input changes to redraw canvas dynamically
+        greetingText.addEventListener('input', drawCard);
+        textColor.addEventListener('change', drawCard);
+
+        // Append emojis into the input box and refresh canvas
+        function addEmoji(emoji) {
+            greetingText.value += emoji;
+            drawCard();
+        }
+
+        // Draw everything on the HTML5 Canvas
+        function drawCard() {
+            if (!uploadedImage) return;
+
+            // 1. Clear and Draw base image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+            // 2. Set Text styling based on canvas size
+            const fontSize = Math.max(canvas.width * 0.06, 24); // Responsive font size
+            ctx.font = `bold ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+            ctx.textAlign = 'center';
+
+            // 3. Draw a soft dark drop-shadow for text readability
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // 4. Fill text color from user selection
+            ctx.fillStyle = textColor.value;
+
+            // 5. Position text near the bottom center of the image
+            const textX = canvas.width / 2;
+            const textY = canvas.height / 2;
+           // const textY = canvas.height - (fontSize * 1);
+
+            // 6. Draw the text
+            ctx.fillText(greetingText.value, textX, textY);
+        }
+
+        // Handle downloading the engineered image
+        downloadBtn.addEventListener('click', function() {
+            if (!uploadedImage) return;
+
+            const link = document.createElement('a');
+            link.download = 'my-greeting-card.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
